@@ -1,6 +1,6 @@
 # 📄 PDFInsight
 
-An AI-powered local-first system for extracting insights from PDF documents using Retrieval-Augmented Generation (RAG). This app loads documents, processes them into chunks, generates embeddings using sentence-transformers, and performs semantic search via a vector store (e.g., FAISS). A FastAPI backend can be used for interactive queries and integration.
+An AI-powered local-first system for extracting insights from PDF documents using Retrieval-Augmented Generation (RAG). This app loads documents, processes them into chunks, generates embeddings using sentence-transformers, and performs semantic search via a Chroma vector store, and answers questions with a local LLM served by Ollama. A FastAPI backend exposes it as a REST API.
 
 ---
 
@@ -8,7 +8,7 @@ An AI-powered local-first system for extracting insights from PDF documents usin
 
 * 📂 Load and parse PDF or text-based documents
 * 🧼 Preprocess and chunk documents for optimal embedding
-* 🔎 Semantic search using vector similarity (e.g., FAISS)
+* 🔎 Semantic search using vector similarity (Chroma)
 * 🧠 Sentence-transformer-based embedding generation
 * 🔄 Retrieval-Augmented Generation engine (RAG)
 * 🚀 FastAPI backend for RESTful document insight queries
@@ -21,7 +21,8 @@ An AI-powered local-first system for extracting insights from PDF documents usin
 ```
 pdfinsight/
 ├── app/
-│   ├── main.py                   # Application entry point (e.g., FastAPI setup)
+│   ├── main.py                   # CLI entry point + ingest pipeline
+│   ├── api.py                    # FastAPI REST API
 │   │
 │   ├── loaders/
 │   │   └── document_loader.py    # Load PDF/text files into memory
@@ -33,7 +34,7 @@ pdfinsight/
 │   │   └── embedding_service.py  # Generate vector embeddings for text chunks
 │   │
 │   ├── vectorstores/
-│   │   └── vector_store.py       # Store and query embedding vectors using FAISS or similar
+│   │   └── vector_store.py       # Store and query embedding vectors in Chroma
 │   │
 │   └── engines/
 │       └── rag_engine.py         # Perform RAG (retrieve + generate)
@@ -47,12 +48,40 @@ pdfinsight/
 
 ## 🔧 Tech Stack
 
-* Python 3.9+
+* Python 3.10+ (tested on 3.12)
 * PdfPlumber (for PDF parsing)
 * langchain
 * sentence-transformers
 * Chroma (for vector search)
+* Ollama (local LLM, default `llama3.1:8b`)
 * FastAPI + Uvicorn (for API layer)
+
+---
+
+## ▶️ Running
+
+```bash
+# 1. Install Ollama (https://ollama.com), then pull a model and start it
+ollama pull llama3.1:8b
+ollama serve                    # or just open the Ollama app
+
+# 2. Set up Python
+python3.12 -m venv myvenv
+source myvenv/bin/activate
+pip install -r requirements.txt
+
+# 3a. CLI: ingest a PDF and ask a question
+cd app
+python main.py /path/to/file.pdf "What is this document about?"
+
+# 3b. REST API (interactive docs at http://localhost:8000/docs)
+cd app
+uvicorn api:app --reload
+curl -F "file=@/path/to/file.pdf" localhost:8000/documents
+curl -H "content-type: application/json" -d '{"question": "What is this about?"}' localhost:8000/query
+```
+
+Use a different model with `OLLAMA_MODEL=mistral` (after `ollama pull mistral`), or a remote Ollama with `OLLAMA_BASE_URL`.
 
 ---
 
