@@ -24,10 +24,10 @@ def create_llm_model(model_name=OLLAMA_MODEL, temperature=0.5):
         temperature=temperature
     )
 
-def process_query(query_text: str, top_k=5, model_name=OLLAMA_MODEL, temperature=0.5):
+def process_query(query_text: str, top_k=5, source=None, model_name=OLLAMA_MODEL, temperature=0.5):
     # Process a query through the RAG pipeline; returns the answer and the chunks it was based on
-    # Retrieve relevant documents
-    results = vector_store.similarity_search(query_text, top_k=top_k)
+    # Retrieve relevant documents (only from `source` if given, otherwise from all documents)
+    results = vector_store.similarity_search(query_text, top_k=top_k, source=source)
 
     # Format context from retrieved documents
     context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])

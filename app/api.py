@@ -17,6 +17,7 @@ app = FastAPI(title="PDFInsight", description="Ask questions about your PDFs usi
 class QueryRequest(BaseModel):
     question: str = Field(..., min_length=1)
     top_k: int = Field(5, ge=1, le=20)
+    filename: str | None = None  # restrict the search to one uploaded PDF
 
 
 class Source(BaseModel):
@@ -53,7 +54,8 @@ def upload_document(file: UploadFile = File(...)):
 @app.post("/query", response_model=QueryResponse)
 def query(request: QueryRequest):
     try:
-        return process_query(request.question, top_k=request.top_k)
+        source = str(UPLOAD_DIR / Path(request.filename).name) if request.filename else None
+        return process_query(request.question, top_k=request.top_k, source=source)
     except Exception as e:
         # Most commonly: Ollama isn't running or the model hasn't been pulled
         raise HTTPException(status_code=503, detail=f"LLM backend error: {e}")

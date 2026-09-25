@@ -35,8 +35,9 @@ def add_documents(documents: list[Document], persist_directory=CHROMA_PERSIST_DI
     print(f"Added {len(new_documents)} new documents.")
     return len(new_documents)
 
-def similarity_search(query_text: str, top_k=5, persist_directory=CHROMA_PERSIST_DIR):
-    # Perform similarity search on the vector store
+def similarity_search(query_text: str, top_k=5, source=None, persist_directory=CHROMA_PERSIST_DIR):
+    # Perform similarity search on the vector store, optionally restricted to one source file
     db = get_db_connection(persist_directory)
-    results = db.similarity_search_with_score(query_text, k=top_k)
+    metadata_filter = {"source": source} if source else None
+    results = db.similarity_search_with_score(query_text, k=top_k, filter=metadata_filter)
     return results

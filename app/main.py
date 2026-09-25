@@ -1,11 +1,13 @@
 # main.py - Command-line entry point for the RAG application
 # Usage (from the app/ directory): python main.py <path/to/file.pdf> ["your question"]
 
+import os
 import sys
+import httpx
 from loaders.document_loader import load_pdf_document
 from processors.document_processor import split_documents, assign_document_ids
 from vectorstores.vector_store import add_documents
-from engines.rag_engine import process_query
+from engines.rag_engine import OLLAMA_BASE_URL, process_query
 
 
 def ingest_pdf(pdf_path):
@@ -27,13 +29,22 @@ def main():
         print('Usage: python main.py <path/to/file.pdf> ["your question"]')
         sys.exit(1)
 
-    pdf_path = sys.argv[1]
+    # Absolute path so the stored "source" metadata is the same regardless of where you run from
+    pdf_path = os.path.abspath(sys.argv[1])
     query = sys.argv[2] if len(sys.argv) > 2 else "Summarize the main points of this document."
+
+    if not os.path.isfile(pdf_path):
+        print(f"Error: file not found: {pdf_path}")
+        sys.exit(1)
 
     ingest_pdf(pdf_path)
 
     print(f"\nProcessing query: '{query}'")
-    result = process_query(query)
+    try:
+        result = process_query(query, source=pdf_path)
+    except httpx.ConnectError:
+        print(f"Error: can't reach Ollama at {OLLAMA_BASE_URL}. Open the Ollama app or run `ollama serve`, then retry.")
+        sys.exit(1)
 
     print("\nResponse:")
     print(result["answer"])
