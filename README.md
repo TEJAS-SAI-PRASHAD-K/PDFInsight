@@ -87,6 +87,7 @@ curl -H "content-type: application/json" -d '{"session_id": "<id>", "question": 
 # Stop the session: deletes its PDFs and its Chroma DB
 curl -H "content-type: application/json" -d '{"session_id": "<id>"}' localhost:8000/stop
 ```
+/Users/tejassaiprashad/Desktop/IMP
 
 Use a different model with `OLLAMA_MODEL=mistral` (after `ollama pull mistral`), or a remote Ollama with `OLLAMA_BASE_URL`.
 
