@@ -1,6 +1,8 @@
 # vector_store.py - Manages operations on the vector database, including adding and retrieving documents
 
+import shutil
 from pathlib import Path
+from chromadb.api.shared_system_client import SharedSystemClient
 from embeddings.embedding_service import create_embedding_model
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
@@ -41,3 +43,12 @@ def similarity_search(query_text: str, top_k=5, source=None, persist_directory=C
     metadata_filter = {"source": source} if source else None
     results = db.similarity_search_with_score(query_text, k=top_k, filter=metadata_filter)
     return results
+
+def delete_db(persist_directory: str):
+    # Chroma caches one open database per path for the life of the process; evict it first
+    # so deleting a session frees its memory, then remove the files
+    system = SharedSystemClient._identifier_to_system.pop(persist_directory, None)
+    SharedSystemClient._identifier_to_refcount.pop(persist_directory, None)
+    if system is not None:
+        system.stop()
+    shutil.rmtree(persist_directory, ignore_errors=True)

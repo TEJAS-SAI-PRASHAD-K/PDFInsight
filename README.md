@@ -77,8 +77,15 @@ python main.py /path/to/file.pdf "What is this document about?"
 # 3b. REST API (interactive docs at http://localhost:8000/docs)
 cd app
 uvicorn api:app --reload
-curl -F "file=@/path/to/file.pdf" localhost:8000/documents
-curl -H "content-type: application/json" -d '{"question": "What is this about?"}' localhost:8000/query
+
+# Start a session: upload one or more PDFs -> returns a session_id (each session gets its own Chroma DB)
+curl -F "files=@/path/to/a.pdf" -F "files=@/path/to/b.pdf" localhost:8000/start
+
+# Ask questions within the session (optionally add "filename": "a.pdf" to search one PDF only)
+curl -H "content-type: application/json" -d '{"session_id": "<id>", "question": "What is this about?"}' localhost:8000/query
+
+# Stop the session: deletes its PDFs and its Chroma DB
+curl -H "content-type: application/json" -d '{"session_id": "<id>"}' localhost:8000/stop
 ```
 
 Use a different model with `OLLAMA_MODEL=mistral` (after `ollama pull mistral`), or a remote Ollama with `OLLAMA_BASE_URL`.

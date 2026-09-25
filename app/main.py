@@ -6,11 +6,11 @@ import sys
 import httpx
 from loaders.document_loader import load_pdf_document
 from processors.document_processor import split_documents, assign_document_ids
-from vectorstores.vector_store import add_documents
+from vectorstores.vector_store import CHROMA_PERSIST_DIR, add_documents
 from engines.rag_engine import OLLAMA_BASE_URL, process_query
 
 
-def ingest_pdf(pdf_path):
+def ingest_pdf(pdf_path, persist_directory=CHROMA_PERSIST_DIR):
     # Load -> chunk -> ID -> embed + store. Returns the number of new chunks added.
     print("Loading PDF documents...")
     documents = load_pdf_document(pdf_path)
@@ -22,7 +22,7 @@ def ingest_pdf(pdf_path):
     processed_chunks = assign_document_ids(document_chunks)
 
     print("Adding documents to vector store...")
-    return add_documents(processed_chunks)
+    return add_documents(processed_chunks, persist_directory=persist_directory)
 
 def main():
     if len(sys.argv) < 2:
